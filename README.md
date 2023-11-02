@@ -28,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
 
   let create_index = true;
 
-  let users = User::collection(&mongo, "db_name", create_index).await?;
+  let users = User::collection(&mongo, "db_name", create_index).await?; // mongodb::Collection<User>
 
   // use the indexed collection...
 
