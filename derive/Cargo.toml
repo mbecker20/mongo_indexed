@@ -1,5 +1,6 @@
 [package]
 name = "mongo_indexed_derive"
+description = "derive macro to declaratively index mongo collections"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
