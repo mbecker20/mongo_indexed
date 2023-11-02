@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use mongodb::{bson::oid::ObjectId, Collection};
 use serde::{de::DeserializeOwned, Serialize};
 
+pub use mongo_indexed_derive as derive;
 pub use mongodb::bson::Document;
 
 mod helpers;
