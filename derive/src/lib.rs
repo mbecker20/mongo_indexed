@@ -12,7 +12,6 @@ use syn::{parse_macro_input, Data, DeriveInput, Expr, Field};
         index,
         unique_index,
         sparse_index,
-        skip_index,
     )
 )]
 pub fn derive_indexed(input: TokenStream) -> TokenStream {
@@ -51,84 +50,38 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
 
     let s = match data {
         Data::Struct(s) => s,
-        Data::Enum(_) => {
-            return quote! {
-                impl mongo_indexed::Indexed for #ident {
-                    fn doc_indexes() -> Vec<mongo_indexed::Document> {
-                        vec![#(#doc_indexes,)*]
-                    }
-                    fn unique_doc_indexes() -> Vec<mongo_indexed::Document> {
-                        vec![#(#unique_doc_indexes,)*]
-                    }
-                    fn sparse_doc_indexes() -> Vec<mongo_indexed::Document> {
-                        vec![#(#sparse_doc_indexes,)*]
-                    }
-                }
-            }
-            .into()
-        }
-        _ => panic!("must derive on struct or enum"),
+        _ => panic!("must derive on struct"),
     };
 
     let mut indexes = Vec::new();
     let mut unique_indexes = Vec::new();
     let mut sparse_indexes = Vec::new();
 
-    for Field {
-        attrs, ident, ty, ..
-    } in s.fields
-    {
+    for Field { attrs, ident, .. } in s.fields {
         if ident.is_none() {
             continue;
         }
         let ident = ident.unwrap();
-        let skip = attrs.iter().any(|attr| attr.path().is_ident("skip_index"));
-        if skip {
-            continue;
-        }
+        let ident = quote!(stringify!(#ident));
         let is_unique = attrs
             .iter()
             .any(|attr| attr.path().is_ident("unique_index"));
         if is_unique {
-            unique_indexes.push(quote! {
-                unique_indexes.push(stringify!(#ident).to_string());
-            });
+            unique_indexes.push(ident);
             continue;
         }
         let is_sparse = attrs
             .iter()
             .any(|attr| attr.path().is_ident("sparse_index"));
         if is_sparse {
-            sparse_indexes.push(quote! {
-                sparse_indexes.push(stringify!(#ident).to_string());
-            });
+            sparse_indexes.push(ident);
             continue;
         }
         let is_index = attrs.iter().any(|attr| attr.path().is_ident("index"));
         if is_index {
-            indexes.push(quote! {
-                indexes.push(stringify!(#ident).to_string());
-            });
+            indexes.push(ident);
             continue;
         }
-        indexes.push(quote! {
-            let nested = <#ty as mongo_indexed::Indexed>::indexes();
-            for nested in nested {
-                indexes.push(format!("{}.{}", stringify!(#ident), nested));
-            }
-        });
-        unique_indexes.push(quote! {
-            let nested = <#ty as mongo_indexed::Indexed>::unique_indexes();
-            for nested in nested {
-                unique_indexes.push(format!("{}.{}", stringify!(#ident), nested));
-            }
-        });
-        sparse_indexes.push(quote! {
-            let nested = <#ty as mongo_indexed::Indexed>::sparse_indexes();
-            for nested in nested {
-                sparse_indexes.push(format!("{}.{}", stringify!(#ident), nested));
-            }
-        });
     }
 
     quote! {
@@ -136,20 +89,14 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
             fn default_collection_name() -> &'static str {
                 stringify!(#collection_name)
             }
-            fn indexes() -> Vec<String> {
-                let mut indexes = Vec::new();
-                #(#indexes)*
-                indexes
+            fn indexes() -> &'static [&'static str] {
+                &[#(#indexes,)*]
             }
-            fn unique_indexes() -> Vec<String> {
-                let mut unique_indexes = Vec::new();
-                #(#unique_indexes)*
-                unique_indexes
+            fn unique_indexes() -> &'static [&'static str] {
+                &[#(#unique_indexes,)*]
             }
-            fn sparse_indexes() -> Vec<String> {
-                let mut sparse_indexes = Vec::new();
-                #(#sparse_indexes)*
-                sparse_indexes
+            fn sparse_indexes() -> &'static [&'static str] {
+                &[#(#sparse_indexes,)*]
             }
             fn doc_indexes() -> Vec<mongo_indexed::Document> {
                 vec![#(#doc_indexes,)*]
