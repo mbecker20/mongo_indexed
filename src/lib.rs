@@ -1,12 +1,14 @@
 use anyhow::Context;
 use async_trait::async_trait;
 use mongodb::{
-    bson::doc, options::IndexOptions, results::CreateIndexResult, Collection, Database, IndexModel,
+    bson::{doc, Document},
+    options::IndexOptions,
+    results::CreateIndexResult,
+    Collection, Database, IndexModel,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
 pub use mongo_indexed_derive as derive;
-pub use mongodb::bson::Document;
 
 #[async_trait]
 pub trait Indexed: Serialize + DeserializeOwned + Sync {

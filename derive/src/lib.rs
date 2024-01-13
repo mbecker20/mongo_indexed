@@ -2,6 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DeriveInput, Expr, Field};
 
+/// The macro requires you import `Document` type yourself eg `use bson::Document;`
 #[proc_macro_derive(
     MongoIndexed,
     attributes(
@@ -98,13 +99,13 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
             fn sparse_indexes() -> &'static [&'static str] {
                 &[#(#sparse_indexes,)*]
             }
-            fn doc_indexes() -> Vec<mongo_indexed::Document> {
+            fn doc_indexes() -> Vec<Document> {
                 vec![#(#doc_indexes,)*]
             }
-            fn unique_doc_indexes() -> Vec<mongo_indexed::Document> {
+            fn unique_doc_indexes() -> Vec<Document> {
                 vec![#(#unique_doc_indexes,)*]
             }
-            fn sparse_doc_indexes() -> Vec<mongo_indexed::Document> {
+            fn sparse_doc_indexes() -> Vec<Document> {
                 vec![#(#sparse_doc_indexes,)*]
             }
         }
