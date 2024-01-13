@@ -18,7 +18,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-mongo_indexed_derive = "0.2.0"
+mongo_indexed_derive = "0.2.2"
 serde = "1.0.193"
 mongodb = "2.8.0"
 async-trait = "0.1.75"
