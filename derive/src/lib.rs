@@ -59,10 +59,9 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
     let mut sparse_indexes = Vec::new();
 
     for Field { attrs, ident, .. } in s.fields {
-        if ident.is_none() {
+        let Some(ident) = ident else {
             continue;
-        }
-        let ident = ident.unwrap();
+        };
         let ident = quote!(stringify!(#ident));
         let is_unique = attrs
             .iter()
