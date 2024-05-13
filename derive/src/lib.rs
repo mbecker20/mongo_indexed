@@ -85,7 +85,7 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
     }
 
     quote! {
-        impl mongo_indexed::Indexed for #ident {
+        impl ::mongo_indexed::Indexed for #ident {
             fn default_collection_name() -> &'static str {
                 stringify!(#collection_name)
             }
@@ -98,13 +98,13 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
             fn sparse_indexes() -> &'static [&'static str] {
                 &[#(#sparse_indexes,)*]
             }
-            fn doc_indexes() -> Vec<Document> {
+            fn doc_indexes() -> ::std::vec::Vec<::mongo_indexed::bson::Document> {
                 vec![#(#doc_indexes,)*]
             }
-            fn unique_doc_indexes() -> Vec<Document> {
+            fn unique_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::bson::Document> {
                 vec![#(#unique_doc_indexes,)*]
             }
-            fn sparse_doc_indexes() -> Vec<Document> {
+            fn sparse_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::bson::Document> {
                 vec![#(#sparse_doc_indexes,)*]
             }
         }
