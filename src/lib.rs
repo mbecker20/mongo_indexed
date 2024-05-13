@@ -9,6 +9,7 @@ use mongodb::{
 use serde::{de::DeserializeOwned, Serialize};
 
 pub use mongo_indexed_derive as derive;
+pub use mongodb::bson;
 
 #[async_trait]
 pub trait Indexed: Serialize + DeserializeOwned + Sync {
