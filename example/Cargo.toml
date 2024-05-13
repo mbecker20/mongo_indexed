@@ -1,0 +1,15 @@
+[package]
+name = "example"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+mongo_indexed = { path = ".." }
+mongo_indexed_derive = { path = "../derive" }
+tokio = "1.37.0"
+mongodb = "2.8.2"
+anyhow = "1.0.83"
+serde = "1.0.201"

@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Expr, Field};
+use syn::{parse_macro_input, Data, DeriveInput, Field};
 
 /// The macro requires you import `Document` type yourself eg `use bson::Document;`
 #[proc_macro_derive(
@@ -28,21 +28,27 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
     for attr in attrs {
         if attr.path().is_ident("unique_doc_index") {
             let doc = attr
-                .parse_args::<Expr>()
-                .expect("unique_doc_index: expected doc! macro");
-            unique_doc_indexes.push(doc);
+                .parse_args::<proc_macro2::TokenStream>()
+                .expect("unique_doc_index: expected JSON document");
+            unique_doc_indexes.push(quote! {
+                ::mongo_indexed::doc! #doc
+            });
         }
         if attr.path().is_ident("sparse_doc_index") {
             let doc = attr
-                .parse_args::<Expr>()
-                .expect("sparse_doc_index: expected doc! macro");
-            sparse_doc_indexes.push(doc);
+                .parse_args::<proc_macro2::TokenStream>()
+                .expect("sparse_doc_index: expected JSON document");
+            sparse_doc_indexes.push(quote! {
+                ::mongo_indexed::doc! #doc
+            });
         }
         if attr.path().is_ident("doc_index") {
             let doc = attr
-                .parse_args::<Expr>()
-                .expect("doc_index: expected doc! macro");
-            doc_indexes.push(doc);
+                .parse_args::<proc_macro2::TokenStream>()
+                .expect("doc_index: expected JSON document");
+            doc_indexes.push(quote! {
+                ::mongo_indexed::doc! #doc
+            });
         }
         if attr.path().is_ident("collection_name") {
             collection_name = attr.parse_args().expect("collection_name: should be ident");
@@ -98,13 +104,13 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
             fn sparse_indexes() -> &'static [&'static str] {
                 &[#(#sparse_indexes,)*]
             }
-            fn doc_indexes() -> ::std::vec::Vec<::mongo_indexed::bson::Document> {
+            fn doc_indexes() -> ::std::vec::Vec<::mongo_indexed::Document> {
                 vec![#(#doc_indexes,)*]
             }
-            fn unique_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::bson::Document> {
+            fn unique_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::Document> {
                 vec![#(#unique_doc_indexes,)*]
             }
-            fn sparse_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::bson::Document> {
+            fn sparse_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::Document> {
                 vec![#(#sparse_doc_indexes,)*]
             }
         }

@@ -1,8 +1,3 @@
-## Configure mongo indexing right on your rust structs
-
-### Example
-
-```rust
 use mongo_indexed::doc;
 use mongo_indexed_derive::MongoIndexed;
 use mongodb::{bson::oid::ObjectId, options::ClientOptions};
@@ -42,4 +37,3 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-```
