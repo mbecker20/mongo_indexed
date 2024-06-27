@@ -9,7 +9,7 @@ license.workspace = true
 [dependencies]
 mongo_indexed = { path = ".." }
 mongo_indexed_derive = { path = "../derive" }
-tokio = "1.37.0"
-mongodb = "2.8.2"
-anyhow = "1.0.83"
-serde = "1.0.201"
+tokio = "1.38.0"
+mongodb = "3.0.0"
+anyhow = "1.0.86"
+serde = "1.0.203"

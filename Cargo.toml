@@ -2,7 +2,7 @@
 members = ["derive", "example"]
 
 [workspace.package]
-version = "0.3.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["mbecker20"]
 repository = "https://github.com/mbecker20/mongo_indexed"
@@ -19,6 +19,6 @@ license.workspace = true
 
 [dependencies]
 mongo_indexed_derive = "0.3.0"
-serde = "1.0.201"
-mongodb = "2.8.2"
-anyhow = "1.0.83"
+serde = "1.0.203"
+mongodb = "3.0.0"
+anyhow = "1.0.86"
