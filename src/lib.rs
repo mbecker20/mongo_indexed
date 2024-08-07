@@ -1,4 +1,3 @@
-use anyhow::Context;
 use mongodb::{
   options::IndexOptions, results::CreateIndexResult, Collection, Database, IndexModel,
 };
@@ -20,7 +19,7 @@ pub trait Indexed: Serialize + DeserializeOwned + Send + Sync {
 pub async fn collection<T: Indexed>(
   db: &Database,
   should_create_index: bool,
-) -> anyhow::Result<Collection<T>> {
+) -> mongodb::error::Result<Collection<T>> {
   collection_with_name::<T>(db, T::default_collection_name(), should_create_index).await
 }
 
@@ -28,7 +27,7 @@ pub async fn collection_with_name<T: Indexed>(
   db: &Database,
   coll_name: &str,
   should_create_index: bool,
-) -> anyhow::Result<Collection<T>> {
+) -> mongodb::error::Result<Collection<T>> {
   let coll = db.collection(coll_name);
 
   if should_create_index {
@@ -57,81 +56,63 @@ pub async fn collection_with_name<T: Indexed>(
 pub async fn create_index<T: Send + Sync>(
   collection: &Collection<T>,
   field: &str,
-) -> anyhow::Result<CreateIndexResult> {
+) -> mongodb::error::Result<CreateIndexResult> {
   let index = IndexModel::builder().keys(doc! { field: 1 }).build();
-  collection
-    .create_index(index)
-    .await
-    .with_context(|| format!("failed to create index on {field}"))
+  collection.create_index(index).await
 }
 
 pub async fn create_unique_index<T: Send + Sync>(
   collection: &Collection<T>,
   field: &str,
-) -> anyhow::Result<CreateIndexResult> {
+) -> mongodb::error::Result<CreateIndexResult> {
   let options = IndexOptions::builder().unique(true).build();
   let index = IndexModel::builder()
     .keys(doc! { field: 1 })
     .options(options)
     .build();
-  collection
-    .create_index(index)
-    .await
-    .with_context(|| format!("failed to create index on {field}"))
+  collection.create_index(index).await
 }
 
 pub async fn create_sparse_index<T: Send + Sync>(
   collection: &Collection<T>,
   field: &str,
-) -> anyhow::Result<CreateIndexResult> {
+) -> mongodb::error::Result<CreateIndexResult> {
   let options = IndexOptions::builder().sparse(true).build();
   let index = IndexModel::builder()
     .keys(doc! { field: 1 })
     .options(options)
     .build();
-  collection
-    .create_index(index)
-    .await
-    .with_context(|| format!("failed to create index on {field}"))
+  collection.create_index(index).await
 }
 
 pub async fn create_index_from_doc<T: Send + Sync>(
   collection: &Collection<T>,
   index_doc: Document,
-) -> anyhow::Result<CreateIndexResult> {
-  let index = IndexModel::builder().keys(index_doc.clone()).build();
-  collection
-    .create_index(index)
-    .await
-    .with_context(|| format!("failed to create index from {index_doc:?}"))
+) -> mongodb::error::Result<CreateIndexResult> {
+  let index = IndexModel::builder().keys(index_doc).build();
+  collection.create_index(index).await
 }
 
 pub async fn create_unique_index_from_doc<T: Send + Sync>(
   collection: &Collection<T>,
   index_doc: Document,
-) -> anyhow::Result<CreateIndexResult> {
+) -> mongodb::error::Result<CreateIndexResult> {
   let options = IndexOptions::builder().unique(true).build();
   let index = IndexModel::builder()
-    .keys(index_doc.clone())
+    .keys(index_doc)
     .options(options)
     .build();
-  collection
-    .create_index(index)
-    .await
-    .with_context(|| format!("failed to create unique index from {index_doc:?}"))
+  collection.create_index(index).await
 }
 
 pub async fn create_sparse_index_from_doc<T: Send + Sync>(
   collection: &Collection<T>,
   index_doc: Document,
-) -> anyhow::Result<CreateIndexResult> {
+) -> mongodb::error::Result<CreateIndexResult> {
   let options = IndexOptions::builder().sparse(true).build();
   let index = IndexModel::builder()
-    .keys(index_doc.clone())
+    .keys(index_doc)
     .options(options)
     .build();
-  collection
-    .create_index(index)
-    .await
-    .with_context(|| format!("failed to create sparse index from {index_doc:?}"))
+  collection.create_index(index).await
 }

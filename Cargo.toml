@@ -21,4 +21,3 @@ license.workspace = true
 mongo_indexed_derive = "1.0.0"
 serde = "1.0.203"
 mongodb = "3.0.0"
-anyhow = "1.0.86"
