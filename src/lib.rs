@@ -89,7 +89,7 @@ pub async fn create_index_from_doc<T: Send + Sync>(
   collection: &Collection<T>,
   index_doc: Document,
 ) -> mongodb::error::Result<CreateIndexResult> {
-  let index = IndexModel::builder().keys(index_doc.clone()).build();
+  let index = IndexModel::builder().keys(index_doc).build();
   collection.create_index(index).await
 }
 
@@ -99,7 +99,7 @@ pub async fn create_unique_index_from_doc<T: Send + Sync>(
 ) -> mongodb::error::Result<CreateIndexResult> {
   let options = IndexOptions::builder().unique(true).build();
   let index = IndexModel::builder()
-    .keys(index_doc.clone())
+    .keys(index_doc)
     .options(options)
     .build();
   collection.create_index(index).await
@@ -111,7 +111,7 @@ pub async fn create_sparse_index_from_doc<T: Send + Sync>(
 ) -> mongodb::error::Result<CreateIndexResult> {
   let options = IndexOptions::builder().sparse(true).build();
   let index = IndexModel::builder()
-    .keys(index_doc.clone())
+    .keys(index_doc)
     .options(options)
     .build();
   collection.create_index(index).await
