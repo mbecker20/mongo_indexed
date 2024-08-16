@@ -6,6 +6,10 @@ use serde::{de::DeserializeOwned, Serialize};
 pub use mongo_indexed_derive as derive;
 pub use mongodb::bson::{doc, Document};
 
+mod error;
+
+pub use error::Error;
+
 pub trait Indexed: Serialize + DeserializeOwned + Send + Sync {
   fn default_collection_name() -> &'static str;
   fn indexes() -> &'static [&'static str];
@@ -19,7 +23,7 @@ pub trait Indexed: Serialize + DeserializeOwned + Send + Sync {
 pub async fn collection<T: Indexed>(
   db: &Database,
   should_create_index: bool,
-) -> mongodb::error::Result<Collection<T>> {
+) -> Result<Collection<T>, Error> {
   collection_with_name::<T>(db, T::default_collection_name(), should_create_index).await
 }
 
@@ -27,27 +31,39 @@ pub async fn collection_with_name<T: Indexed>(
   db: &Database,
   coll_name: &str,
   should_create_index: bool,
-) -> mongodb::error::Result<Collection<T>> {
+) -> Result<Collection<T>, Error> {
   let coll = db.collection(coll_name);
 
   if should_create_index {
     for index in T::indexes() {
-      create_index(&coll, index).await?;
+      create_index(&coll, index)
+        .await
+        .map_err(|err| Error::IndexFailed { index, err })?;
     }
-    for unique_index in T::unique_indexes() {
-      create_unique_index(&coll, unique_index).await?;
+    for index in T::unique_indexes() {
+      create_unique_index(&coll, index)
+        .await
+        .map_err(|err| Error::UniqueIndexFailed { index, err })?;
     }
-    for sparse_index in T::sparse_indexes() {
-      create_sparse_index(&coll, sparse_index).await?;
+    for index in T::sparse_indexes() {
+      create_sparse_index(&coll, index)
+        .await
+        .map_err(|err| Error::SparseIndexFailed { index, err })?;
     }
-    for doc_index in T::doc_indexes() {
-      create_index_from_doc(&coll, doc_index).await?;
+    for doc in T::doc_indexes() {
+      create_index_from_doc(&coll, doc)
+        .await
+        .map_err(|err| Error::DocIndexFailed { err })?;
     }
-    for unique_doc_index in T::unique_doc_indexes() {
-      create_unique_index_from_doc(&coll, unique_doc_index).await?;
+    for doc in T::unique_doc_indexes() {
+      create_unique_index_from_doc(&coll, doc)
+        .await
+        .map_err(|err| Error::UniqueDocIndexFailed { err })?;
     }
-    for sparse_doc_index in T::sparse_doc_indexes() {
-      create_sparse_index_from_doc(&coll, sparse_doc_index).await?;
+    for doc in T::sparse_doc_indexes() {
+      create_sparse_index_from_doc(&coll, doc)
+        .await
+        .map_err(|err| Error::SparseDocIndexFailed { err })?;
     }
   }
   Ok(coll)

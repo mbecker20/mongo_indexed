@@ -55,7 +55,7 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
     }
   }
 
-  let s = match data {
+  let target_struct = match data {
     Data::Struct(s) => s,
     _ => panic!("must derive on struct"),
   };
@@ -64,7 +64,7 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
   let mut unique_indexes = Vec::new();
   let mut sparse_indexes = Vec::new();
 
-  for Field { attrs, ident, .. } in s.fields {
+  for Field { attrs, ident, .. } in target_struct.fields {
     let Some(ident) = ident else {
       continue;
     };
