@@ -15,9 +15,11 @@ pub trait Indexed: Serialize + DeserializeOwned + Send + Sync {
   fn indexes() -> &'static [&'static str];
   fn unique_indexes() -> &'static [&'static str];
   fn sparse_indexes() -> &'static [&'static str];
+  fn sparse_unique_indexes() -> &'static [&'static str];
   fn doc_indexes() -> Vec<Document>;
   fn unique_doc_indexes() -> Vec<Document>;
   fn sparse_doc_indexes() -> Vec<Document>;
+  fn sparse_unique_doc_indexes() -> Vec<Document>;
 }
 
 pub async fn collection<T: Indexed>(
@@ -50,6 +52,11 @@ pub async fn collection_with_name<T: Indexed>(
         .await
         .map_err(|err| Error::SparseIndexFailed { index, err })?;
     }
+    for index in T::sparse_unique_indexes() {
+      create_sparse_unique_index(&coll, index)
+        .await
+        .map_err(|err| Error::SparseIndexFailed { index, err })?;
+    }
     for doc in T::doc_indexes() {
       create_index_from_doc(&coll, doc)
         .await
@@ -62,6 +69,11 @@ pub async fn collection_with_name<T: Indexed>(
     }
     for doc in T::sparse_doc_indexes() {
       create_sparse_index_from_doc(&coll, doc)
+        .await
+        .map_err(|err| Error::SparseDocIndexFailed { err })?;
+    }
+    for doc in T::sparse_unique_doc_indexes() {
+      create_sparse_unique_index_from_doc(&coll, doc)
         .await
         .map_err(|err| Error::SparseDocIndexFailed { err })?;
     }
@@ -100,6 +112,17 @@ pub async fn create_sparse_index<T: Send + Sync>(
     .build();
   collection.create_index(index).await
 }
+pub async fn create_sparse_unique_index<T: Send + Sync>(
+  collection: &Collection<T>,
+  field: &str,
+) -> mongodb::error::Result<CreateIndexResult> {
+  let options = IndexOptions::builder().sparse(true).unique(true).build();
+  let index = IndexModel::builder()
+    .keys(doc! { field: 1 })
+    .options(options)
+    .build();
+  collection.create_index(index).await
+}
 
 pub async fn create_index_from_doc<T: Send + Sync>(
   collection: &Collection<T>,
@@ -126,6 +149,18 @@ pub async fn create_sparse_index_from_doc<T: Send + Sync>(
   index_doc: Document,
 ) -> mongodb::error::Result<CreateIndexResult> {
   let options = IndexOptions::builder().sparse(true).build();
+  let index = IndexModel::builder()
+    .keys(index_doc)
+    .options(options)
+    .build();
+  collection.create_index(index).await
+}
+
+pub async fn create_sparse_unique_index_from_doc<T: Send + Sync>(
+  collection: &Collection<T>,
+  index_doc: Document,
+) -> mongodb::error::Result<CreateIndexResult> {
+  let options = IndexOptions::builder().sparse(true).unique(true).build();
   let index = IndexModel::builder()
     .keys(index_doc)
     .options(options)

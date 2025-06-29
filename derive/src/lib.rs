@@ -10,9 +10,11 @@ use syn::{parse_macro_input, Data, DeriveInput, Field};
     doc_index,
     unique_doc_index,
     sparse_doc_index,
+    sparse_unique_doc_index,
     index,
     unique_index,
     sparse_index,
+    sparse_unique_index,
   )
 )]
 pub fn derive_indexed(input: TokenStream) -> TokenStream {
@@ -23,6 +25,7 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
   let mut doc_indexes = Vec::new();
   let mut unique_doc_indexes = Vec::new();
   let mut sparse_doc_indexes = Vec::new();
+  let mut sparse_unique_doc_indexes = Vec::new();
   let mut collection_name = ident.clone();
 
   for attr in attrs {
@@ -39,6 +42,14 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
         .parse_args::<proc_macro2::TokenStream>()
         .expect("sparse_doc_index: expected JSON document");
       sparse_doc_indexes.push(quote! {
+          ::mongo_indexed::doc! #doc
+      });
+    }
+    if attr.path().is_ident("sparse_unique_doc_index") {
+      let doc = attr
+        .parse_args::<proc_macro2::TokenStream>()
+        .expect("sparse_unique_doc_index: expected JSON document");
+      sparse_unique_doc_indexes.push(quote! {
           ::mongo_indexed::doc! #doc
       });
     }
@@ -63,6 +74,7 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
   let mut indexes = Vec::new();
   let mut unique_indexes = Vec::new();
   let mut sparse_indexes = Vec::new();
+  let mut sparse_unique_indexes = Vec::new();
 
   for Field { attrs, ident, .. } in target_struct.fields {
     let Some(ident) = ident else {
@@ -83,6 +95,13 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
       sparse_indexes.push(ident);
       continue;
     }
+    let is_sparse_unique = attrs
+      .iter()
+      .any(|attr| attr.path().is_ident("sparse_unique_index"));
+    if is_sparse_unique {
+      sparse_unique_indexes.push(ident);
+      continue;
+    }
     let is_index = attrs.iter().any(|attr| attr.path().is_ident("index"));
     if is_index {
       indexes.push(ident);
@@ -91,29 +110,35 @@ pub fn derive_indexed(input: TokenStream) -> TokenStream {
   }
 
   quote! {
-		impl ::mongo_indexed::Indexed for #ident {
-			fn default_collection_name() -> &'static str {
-				stringify!(#collection_name)
-			}
-			fn indexes() -> &'static [&'static str] {
-				&[#(#indexes,)*]
-			}
-			fn unique_indexes() -> &'static [&'static str] {
-				&[#(#unique_indexes,)*]
-			}
-			fn sparse_indexes() -> &'static [&'static str] {
-				&[#(#sparse_indexes,)*]
-			}
-			fn doc_indexes() -> ::std::vec::Vec<::mongo_indexed::Document> {
-				vec![#(#doc_indexes,)*]
-			}
-			fn unique_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::Document> {
-				vec![#(#unique_doc_indexes,)*]
-			}
-			fn sparse_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::Document> {
-				vec![#(#sparse_doc_indexes,)*]
-			}
-		}
+    impl ::mongo_indexed::Indexed for #ident {
+      fn default_collection_name() -> &'static str {
+        stringify!(#collection_name)
+      }
+      fn indexes() -> &'static [&'static str] {
+        &[#(#indexes,)*]
+      }
+      fn unique_indexes() -> &'static [&'static str] {
+        &[#(#unique_indexes,)*]
+      }
+      fn sparse_indexes() -> &'static [&'static str] {
+        &[#(#sparse_indexes,)*]
+      }
+      fn sparse_unique_indexes() -> &'static [&'static str] {
+        &[#(#sparse_unique_indexes,)*]
+      }
+      fn doc_indexes() -> ::std::vec::Vec<::mongo_indexed::Document> {
+        vec![#(#doc_indexes,)*]
+      }
+      fn unique_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::Document> {
+        vec![#(#unique_doc_indexes,)*]
+      }
+      fn sparse_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::Document> {
+        vec![#(#sparse_doc_indexes,)*]
+      }
+      fn sparse_unique_doc_indexes() -> ::std::vec::Vec<::mongo_indexed::Document> {
+        vec![#(#sparse_unique_doc_indexes,)*]
+      }
+    }
   }
   .into()
 }
